@@ -1,5 +1,4 @@
 from typing import Annotated
-from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
 from requests import Session
@@ -8,8 +7,6 @@ from sqlalchemy import func
 from app.services.get_db import get_db
 from app.models.formulario import RespostasFormulario
 from app.schemas.formulario import RespostasFormularioCreate
-
-import pytz
 
 router = APIRouter(prefix="/respostas_formulario", tags=["Respostas Formulário"])
 
@@ -66,9 +63,6 @@ def all_respostas(db: db_dependency):
 
     if not result:
         raise HTTPException(status_code=404, detail="Candidaturas não encontradas")
-
-    tz = ZoneInfo("America/Sao_Paulo")
-    utc = ZoneInfo("UTC")
 
     response = []
     for item in result:
