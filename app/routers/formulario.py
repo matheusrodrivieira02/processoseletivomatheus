@@ -1,4 +1,5 @@
 from typing import Annotated
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
 from requests import Session
@@ -8,6 +9,7 @@ from app.services.get_db import get_db
 from app.models.formulario import RespostasFormulario
 from app.schemas.formulario import RespostasFormularioCreate
 
+import pytz
 
 router = APIRouter(prefix="/respostas_formulario", tags=["Respostas Formulário"])
 
@@ -50,13 +52,44 @@ def register_respostas(respostas_formulario: RespostasFormularioCreate, db: Sess
         "status": db_respostas_formulario.status,
     }
 
-@router.get("/todos", summary="Busca todos as respostas das candidaturas do processo seletivo")
+# @router.get("/todos", summary="Busca todos as respostas das candidaturas do processo seletivo")
+# def all_respostas(db: db_dependency):
+#     result = db.query(RespostasFormulario).all()
+
+#     if not result:
+#         raise HTTPException(status_code=404, detail="Candidaturas não encontradas")
+#     return result
+
+@router.get("/todos", summary="Busca todos")
 def all_respostas(db: db_dependency):
     result = db.query(RespostasFormulario).all()
 
     if not result:
         raise HTTPException(status_code=404, detail="Candidaturas não encontradas")
-    return result
+
+    tz = ZoneInfo("America/Sao_Paulo")
+    utc = ZoneInfo("UTC")
+
+    response = []
+    for item in result:
+        response.append({
+            "id": item.id,
+            "created_at": item.created_at.strftime("%d/%m/%Y %H:%M:%S"),
+            "nome_completo": item.nome_completo,
+            "email": item.email,
+            "telefone": item.telefone,
+            "cargo_desejado": item.cargo_desejado,
+            "cargo_nivel": item.cargo_nivel,
+            "pretensao_salarial": item.pretensao_salarial,
+            "anos_experiencia": item.anos_experiencia,
+            "habilidades": item.habilidades,
+            "link_linkedin": item.link_linkedin,
+            "sobre_voce": item.sobre_voce,
+            "porque_trabalhar_aqui": item.porque_trabalhar_aqui,
+            "status": item.status
+        })
+
+    return response
 
 @router.get("/count", summary="Busca a quantidade de respostas para o processo seletivo")
 def count_respostas(db: Session = Depends(get_db)):
